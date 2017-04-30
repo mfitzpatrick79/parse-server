@@ -20,13 +20,16 @@ gaze('src/**/*', function(err, watcher) {
     }
   });
 });
+const args = (process.argv && process.argv.length > 1) ? process.argv.slice(2) : [];
+console.error('\n\n\nSTARTING APP WITH:\nprcess.args: %j', args);
 
 try {
   // Run and watch dist 
   nodemon({
     script: 'bin/parse-server',
     ext: 'js json',
-    watch: 'lib'
+    watch: 'lib',
+    args: args
   });
 } catch (e) {
   console.error(e.message, e.stack);

@@ -29,6 +29,7 @@ export default function({
   if (help) {
     program.on('--help', help);
   }
+  console.log('Args: %j', process.argv);
   program.parse(process.argv, process.env);
 
   const options = program.getOptions();
