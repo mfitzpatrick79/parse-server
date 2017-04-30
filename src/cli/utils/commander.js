@@ -66,28 +66,48 @@ function parseEnvironment(env = {}) {
 function parseConfigFile(program) {
   let options = {};
   if (program.args.length > 0) {
-    let jsonPath = program.args[0];
-    jsonPath = path.resolve(jsonPath);
-    const jsonConfig = require(jsonPath);
-    if (jsonConfig.apps) {
-      if (jsonConfig.apps.length > 1) {
-        throw 'Multiple apps are not supported';
-      }
-      options = jsonConfig.apps[0];
-    } else {
-      options = jsonConfig;
+    options = loadConfigFile(program.args[0]);
+  } else {
+    options = loadConfigFile('config.json', true);
+  }
+
+  Object.keys(options).forEach((key) => {
+    const value = options[key];
+    if (!_definitions[key]) {
+      console.error(`Unknown option: ${key}`);
+      console.error(`Using definitions: `, _definitions);
+      throw `error: unknown option ${key}`;
     }
-    Object.keys(options).forEach((key) => {
-      const value = options[key];
-      if (!_definitions[key]) {
-        throw `error: unknown option ${key}`;
-      }
-      const action = _definitions[key].action;
-      if (action) {
-        options[key] = action(value);
-      }
-    });
+    const action = _definitions[key].action;
+    if (action) {
+      options[key] = action(value);
+    }
+  });
+  return options;
+}
+
+function loadConfigFile(jsonPath, ignoreNotFound) {
+  jsonPath = path.resolve(jsonPath);
+
+  let jsonConfig;
+  try {
+    jsonConfig = require(jsonPath);
     console.log(`Configuration loaded from ${jsonPath}`)
+  } catch (err) {
+    if (!ignoreNotFound) {
+      throw err;
+    }
+    jsonConfig = {};
+  }
+
+  let options;
+  if (jsonConfig.apps) {
+    if (jsonConfig.apps.length > 1) {
+      throw 'Multiple apps are not supported';
+    }
+    options = jsonConfig.apps[0];
+  } else {
+    options = jsonConfig;
   }
   return options;
 }
